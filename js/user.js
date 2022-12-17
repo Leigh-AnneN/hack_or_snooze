@@ -112,7 +112,7 @@ function updateUIOnUserLogin() {
 
   hidePageComponents();
 //re-display stories so that favorite stars can appear
-  $putStoriesOnPage();
+  putStoriesOnPage();
   $allStoriesList.show();
 
   updateNavOnLogin();

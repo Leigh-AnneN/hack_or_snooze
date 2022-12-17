@@ -19,15 +19,18 @@ async function getAndShowStoriesOnStart() {
  * Returns the markup for the story.
  */
 
-function generateStoryMarkup(story, showDeleteBtn = false) {
+ function generateStoryMarkup(story, showDeleteBtn = false) {
   // console.debug("generateStoryMarkup", story);
 
   const hostName = story.getHostName();
 
+  // if a user is logged in, show favorite/not-favorite star
   const showStar = Boolean(currentUser);
 
   return $(`
       <li id="${story.storyId}">
+        ${showDeleteBtn ? getDeleteBtnHTML() : ""}
+        ${showStar ? getStarHTML(story, currentUser) : ""}
         <a href="${story.url}" target="a_blank" class="story-link">
           ${story.title}
         </a>
@@ -38,24 +41,26 @@ function generateStoryMarkup(story, showDeleteBtn = false) {
     `);
 }
 
-//Make delete Button HTML for story
 
-function getDeleteBtnHTML(){
-  return `<span class="trash-can">
-  <i class = "fas fa-trash-alt"></i>
-  </span>`
+/** Make delete button HTML for story */
+
+function getDeleteBtnHTML() {
+  return `
+      <span class="trash-can">
+        <i class="fas fa-trash-alt"></i>
+      </span>`;
 }
 
-//favourite/not-favorite star for story
-function getStarHTML(story, user){
+/** Make favorite/not-favorite star for story */
+
+function getStarHTML(story, user) {
   const isFavorite = user.isFavorite(story);
   const starType = isFavorite ? "fas" : "far";
   return `
-  <span class="star">
-  <i class="${starType} fa-star"><?i>
-  </span>`;
+      <span class="star">
+        <i class="${starType} fa-star"></i>
+      </span>`;
 }
-
 /** Gets list of stories from server, generates their HTML, and puts on page. */
 
 function putStoriesOnPage() {
@@ -86,7 +91,7 @@ async function deleteStory(evt){
   //re-generate story list
   await putUserStoriesOnPage();
 }
-$ownStories.on("click",".trash-can, deleteStory");
+$ownStories.on("click",".trash-can", deleteStory);
 
 //Handle submission of new Story
 async function submitNewStory(evt) {
@@ -95,13 +100,14 @@ evt.preventDefault();
 
 //on submit
 //get data from form
-const author = $("#create-author").val();
-const title = $('#create-title').val();
+const title = $("#create-title").val();
 const url = $("#create-url").val();
+const author = $("#create-author").val();
 const username = currentUser.username;
-const storyData = {title, url, author, username}
+const storyData = {title, url, author, username };
 //addStory()
-const story = await storyList.addStory(currentUser,StoryData);
+const story = await storyList.addStory(currentUser,storyData);
+
 const $story = generateStoryMarkup(story);
 $allStoriesList.prepend($story);
 
@@ -116,7 +122,28 @@ $submitForm.trigger("reset");
 $submitForm.on("submit",submitNewStory);
 
 /******************************************************************************
- * Functionality for favorites list and starr/un-starr a story
+ * Functionality for list of user's own stories
+ */
+
+function putUserStoriesOnPage() {
+  console.debug("putUserStoriesOnPage");
+
+  $ownStories.empty();
+
+  if (currentUser.ownStories.length === 0) {
+    $ownStories.append("<h5>No stories added by user yet!</h5>");
+  } else {
+    // loop through all of users stories and generate HTML for them
+    for (let story of currentUser.ownStories) {
+      let $story = generateStoryMarkup(story, true);
+      $ownStories.append($story);
+    }
+  }
+
+  $ownStories.show();
+}
+/******************************************************************************
+ * Functionality for favorites list and starr/un-star a story
  */
 
 /** Put favorites list on page. */
@@ -162,5 +189,4 @@ async function toggleStoryFavorite(evt) {
 }
 
 $storiesLists.on("click", ".star", toggleStoryFavorite);
-
 

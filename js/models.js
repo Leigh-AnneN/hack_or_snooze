@@ -233,10 +233,16 @@ class User {
   //the API 
   //story: a story instance to add to favorites
   async addFavorite(story) {
-    this.favourites.push(story);
-    await this._addOrRemoveFavorite("remove", story);
+    this.favorites.push(story);
+    await this._addOrRemoveFavorite("add", story)
   }
 
+  //remove a story from the list of user favorites, and update the API
+  //story (the story instance to remove from favorites)
+  async removeFavorite(story){
+    this.favorites = this.favorites.filter(s=> s.storyId !== story.storyId);
+    await this._addOrRemoveFavorite("add",story)
+  }
   //update API with favortie/not favorite
   //-newState: "add" or "remove"
   //-story: Story instance to make favorite/none favorite
